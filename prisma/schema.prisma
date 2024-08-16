@@ -1,0 +1,32 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Story {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId     String   @db.ObjectId
+  content    String
+  createdAt  DateTime @default(now())
+  expiresAt  DateTime?
+  isDeleted  Boolean  @default(false)
+  updatedAt  DateTime @updatedAt
+
+  @@index([userId], name: "user_idx")
+  @@index([createdAt, expiresAt], name: "time_idx")
+  @@map("stories")
+}
+
+model Follow {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  followerId  String   @db.ObjectId
+  followingId String   @db.ObjectId
+  createdAt   DateTime @default(now())
+
+  @@index([followerId, followingId], name: "follow_idx")
+  @@map("follows")
+}
