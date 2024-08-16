@@ -20,15 +20,38 @@ import { AuthUser } from 'src/decorators/auth.decorator';
   path: 'story',
 })
 export class StoryController {
-  constructor(private readonly storyService: StoryService) {}
+  constructor(private readonly storyService: StoryService) { }
+
 
   @Post()
   async createStory(
     @AuthUser() user: IAuthPayload,
     @Body() data: CreateStoryDto,
   ): Promise<Story> {
-    console.log("APA DATA :",data);
-    return this.storyService.createStory(data);
+    const storyData = {
+      ...data,
+      media: {
+        create: data.media.map((url) => ({ url })),
+      },
+    };
+    return this.storyService.createStory(storyData);
+  }
+
+  @Put(':id')
+  async updateStory(
+    @Param('id') id: string,
+    @Body() data: UpdateStoryDto,
+  ): Promise<Story> {
+    const storyData = {
+      ...data,
+      media: data.media
+        ? {
+          deleteMany: {},
+          create: data.media.map((url) => ({ url })),
+        }
+        : undefined,
+    };
+    return this.storyService.updateStory(id, storyData);
   }
 
   @Get()
@@ -41,14 +64,6 @@ export class StoryController {
     @Param('id') id: string,
   ): Promise<Story | null> {
     return this.storyService.findStoryById(id);
-  }
-
-  @Put(':id')
-  async updateStory(
-    @Param('id') id: string,
-    @Body() data: UpdateStoryDto,
-  ): Promise<Story> {
-    return this.storyService.updateStory(id, data);
   }
 
   @Delete(':id')

@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsMongoId, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsString, IsMongoId, IsArray, ArrayNotEmpty, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateStoryDto {
@@ -17,6 +17,15 @@ export class CreateStoryDto {
   @IsNotEmpty()
   @IsString()
   content: string;
+
+  @ApiProperty({
+    description: 'An array of media URLs associated with the story',
+    example: ['https://example.com/media1.jpg', 'https://example.com/media2.jpg'],
+  })
+  @IsArray()
+  @ArrayNotEmpty()
+  @IsString({ each: true })
+  media: string[];
 }
 
 export class UpdateStoryDto {
@@ -28,6 +37,16 @@ export class UpdateStoryDto {
   @IsOptional()
   @IsString()
   content?: string;
+
+  @ApiProperty({
+    description: 'List of media URLs associated with the story',
+    example: ['https://example.com/media1.jpg', 'https://example.com/media2.jpg'],
+    required: false,
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  media?: string[];
 }
 
 export class ViewStoryDto {
@@ -54,6 +73,12 @@ export class ViewStoryDto {
   @IsNotEmpty()
   @IsString()
   content: string;
+
+  @ApiProperty({
+    description: 'An array of media URLs associated with the story',
+    example: ['https://example.com/media1.jpg', 'https://example.com/media2.jpg'],
+  })
+  media: string[];
 
   @ApiProperty({
     description: 'The creation date of the story',

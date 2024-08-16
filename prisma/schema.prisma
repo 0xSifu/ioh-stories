@@ -16,6 +16,8 @@ model Story {
   isDeleted  Boolean  @default(false)
   updatedAt  DateTime @updatedAt
 
+  media      Media[]  @relation("StoryMedia")
+
   @@index([userId], name: "user_idx")
   @@index([createdAt, expiresAt], name: "time_idx")
   @@map("stories")
@@ -29,4 +31,13 @@ model Follow {
 
   @@index([followerId, followingId], name: "follow_idx")
   @@map("follows")
+}
+
+model Media {
+  id      String   @id @default(auto()) @map("_id") @db.ObjectId
+  url     String
+  storyId String   @db.ObjectId
+  story   Story    @relation("StoryMedia", fields: [storyId], references: [id])
+
+  @@map("media")
 }
