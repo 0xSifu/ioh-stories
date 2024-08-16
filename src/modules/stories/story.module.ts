@@ -6,9 +6,11 @@ import { ConfigModule } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { AuthEventController } from './controllers/auth-event.controller';
 import { JwtModule } from '@nestjs/jwt';
+import { CacheModule } from '../cache/cache.module';
 
 @Module({
   imports: [
+    CacheModule,
     ClientsModule.register([
       {
         name: 'AUTH_SERVICE',

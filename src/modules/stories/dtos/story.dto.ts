@@ -1,5 +1,5 @@
 import { IsNotEmpty, IsString, IsMongoId, IsArray, ArrayNotEmpty, IsOptional } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, PartialType } from '@nestjs/swagger';
 
 export class CreateStoryDto {
   @ApiProperty({
@@ -28,7 +28,7 @@ export class CreateStoryDto {
   media: string[];
 }
 
-export class UpdateStoryDto {
+export class UpdateStoryDto extends PartialType(CreateStoryDto) {
   @ApiProperty({
     description: 'The updated content of the story (optional)',
     example: 'This is an updated story content example.',
@@ -47,6 +47,14 @@ export class UpdateStoryDto {
   @IsArray()
   @IsString({ each: true })
   media?: string[];
+
+  @ApiProperty({
+    description: 'The version of the story used for optimistic locking',
+    example: 1,
+    required: false,
+  })
+  @IsOptional()
+  version?: number;
 }
 
 export class ViewStoryDto {
