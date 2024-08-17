@@ -48,13 +48,6 @@ export class UpdateStoryDto extends PartialType(CreateStoryDto) {
   @IsString({ each: true })
   media?: string[];
 
-  @ApiProperty({
-    description: 'The version of the story used for optimistic locking',
-    example: 1,
-    required: false,
-  })
-  @IsOptional()
-  version?: number;
 }
 
 export class ViewStoryDto {
