@@ -16,12 +16,11 @@ model Story {
   isDeleted  Boolean  @default(false)
   updatedAt  DateTime @updatedAt
   version    Int      @default(0)
-  id_version Int      @default(0)
 
   media      Media[]  @relation("StoryMedia")
   versions   Version[]
 
-  @@unique([id, version, id_version], name: "story_id_version_unique")
+  @@unique([id, version], name: "story_id_version_unique")
   @@index([userId], name: "user_idx")
   @@index([createdAt, expiresAt], name: "time_idx")
   @@map("stories")
