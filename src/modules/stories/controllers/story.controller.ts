@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { Story } from '@prisma/client';
 import { StoryService } from '../services/story.service';
-import { CreateStoryDto, UpdateStoryDto } from '../dtos/story.dto';
+import { CreateStoryDto, UpdateStoryDto, FollowedUsersStoriesDto } from '../dtos/story.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { IAuthPayload } from 'src/interfaces/auth.interface';
 import { AuthUser } from 'src/decorators/auth.decorator';
@@ -64,6 +64,14 @@ export class StoryController {
     @Param('id') id: string,
   ): Promise<Story | null> {
     return this.storyService.findStoryById(id);
+  }
+
+  @Post('followed')
+  async getStoriesFromFollowedUsers(
+    @AuthUser() user: IAuthPayload,
+    @Body() data: FollowedUsersStoriesDto,
+  ){
+    return this.storyService.findAllStoriesByFollowedUsers(data.userId);
   }
 
   @Delete(':id')

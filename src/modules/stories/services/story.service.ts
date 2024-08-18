@@ -23,45 +23,51 @@ export class StoryService {
   async createStory(data: Prisma.StoryCreateInput): Promise<Story> {
     const lockResource = `story-create-${data.userId}`;
     const ttl = 5000;
-
+  
     if (!(await this.lockService.acquireLock(lockResource, ttl))) {
       throw new ConflictException('Could not acquire lock. Please try again.');
     }
-
+  
     try {
+      const currentDate = new Date();
+      const timezoneOffset = 7 * 60 * 60 * 1000;
+  
+      const createdAt = new Date(currentDate.getTime() + timezoneOffset);
+      const expiresAt = new Date(createdAt.getTime() + 24 * 60 * 60 * 1000);
+  
       const newStory = await this.prisma.$transaction(async (prisma) => {
         const story = await prisma.story.create({
           data: {
             ...data,
-            createdAt: new Date(),
-            expiresAt: new Date(Date.now() + 24 + 7 * 60 * 60 * 1000),
+            createdAt,
+            expiresAt,
             version: 0,
           },
           include: {
             media: true,
           },
         });
-
+  
         await prisma.version.create({
           data: {
             storyId: story.id,
             version: 0,
           },
         });
-
+  
         return story;
       });
-
+  
       await this.sendNotification(newStory);
       await this.cacheManager.del('all-stories');
       await this.cacheManager.del(`story-${newStory.id}`);
-
+  
       return newStory;
     } finally {
       await this.lockService.releaseLock(lockResource);
     }
   }
-  
+    
   async updateStory(id: string, data: Prisma.StoryUpdateInput): Promise<Story> {
     const lockResource = `story-update-${id}`;
     const ttl = 5000;
@@ -198,6 +204,81 @@ export class StoryService {
     } finally {
       await this.lockService.releaseLock(lockResource);
     }
+  }
+
+  async findAllStoriesByFollowedUsers(userId: string): Promise<Story[]> {
+    const cacheKey = `stories-followed-${userId}`;
+    const cachedStories = await this.cacheManager.get<Story[]>(cacheKey);
+  
+    try {
+      const currentDate = new Date();
+      let stories: Story[];
+  
+      if (cachedStories) {
+        const newStories = await this.prisma.story.findMany({
+          where: {
+            userId: {
+              in: await this.getFollowedUserIds(userId),
+            },
+            expiresAt: {
+              gt: currentDate,
+            },
+          },
+          include: {
+            media: true,
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+        });
+  
+        stories = [...cachedStories, ...newStories];
+        stories = Array.from(new Map(stories.map(story => [story.id, story])).values());
+        stories.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  
+        const expiryTime = Math.max(...stories.map(story => story.expiresAt?.getTime() || 0)) - currentDate.getTime();
+        await this.cacheManager.set(cacheKey, stories, Math.max(expiryTime, 3600 * 24)); 
+      } else {
+        stories = await this.prisma.story.findMany({
+          where: {
+            userId: {
+              in: await this.getFollowedUserIds(userId),
+            },
+            expiresAt: {
+              gt: currentDate,
+            },
+          },
+          include: {
+            media: true,
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+        });
+  
+        const expiryTime = Math.max(...stories.map(story => story.expiresAt?.getTime() || 0)) - currentDate.getTime();
+        await this.cacheManager.set(cacheKey, stories, Math.max(expiryTime, 3600 * 24));
+      }
+  
+      return stories;
+    } catch (error) {
+      this.logger.error(`Error fetching stories from followed users: ${error.message}`);
+      throw error;
+    }
+  }
+  
+
+  private async getFollowedUserIds(userId: string): Promise<string[]> {
+    const follows = await this.prisma.follow.findMany({
+      where: {
+        followerId: userId,
+      },
+      select: {
+        followingId: true,
+      },
+    });
+
+    return follows.map(follow => follow.followingId);
   }
 
   private async sendNotification(story: Story): Promise<void> {

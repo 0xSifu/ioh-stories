@@ -4,7 +4,7 @@ export interface ITokenResponse {
 }
 
 export interface IAuthPayload {
-  id: number;
+  id: string;
 }
 
 export enum TokenType {

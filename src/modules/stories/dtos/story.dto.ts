@@ -87,3 +87,13 @@ export class ViewStoryDto {
   })
   createdAt: Date;
 }
+
+export class FollowedUsersStoriesDto {
+  @ApiProperty({
+    description: 'The ID of the user requesting followed stories',
+    example: '60b7cddc6b6b5c001cf53b21',
+  })
+  @IsNotEmpty()
+  @IsMongoId()
+  userId: string;
+}
