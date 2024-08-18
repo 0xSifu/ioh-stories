@@ -14,10 +14,14 @@ import { StoryModule } from 'src/modules/stories/story.module';
 import { AuthGuard } from 'src/guards/auth.guard';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import * as RedisStore from 'cache-manager-ioredis';
+import redisConfig from 'src/config/redis.config';
+import { CacheModule } from 'src/modules/cache/cache.module';
 
 @Module({
   imports: [
     CommonModule,
+    CacheModule,
     FollowModule,
     StoryModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),

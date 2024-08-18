@@ -45,6 +45,18 @@ export class FollowService {
         }
     }
 
+    async findFollowers(userId: string): Promise<Follow[]> {
+        try {
+          return await this.prisma.follow.findMany({
+            where: { followerId: userId },
+            orderBy: { createdAt: 'desc' },
+          });
+        } catch (error) {
+          this.logger.error(`Error finding followers for user ID ${userId}: ${error.message}`);
+          throw error;
+        }
+    }
+
     async findFollowById(id: string): Promise<Follow | null> {
         try {
             return await this.prisma.follow.findUnique({ where: { id } });

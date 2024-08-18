@@ -6,9 +6,12 @@ import { ConfigModule } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { AuthEventController } from './controllers/auth-event.controller';
 import { JwtModule } from '@nestjs/jwt';
+import { CacheModule } from '../cache/cache.module';
+import { LockService } from './services/lock.service';
 
 @Module({
   imports: [
+    CacheModule,
     ClientsModule.register([
       {
         name: 'AUTH_SERVICE',
@@ -33,7 +36,7 @@ import { JwtModule } from '@nestjs/jwt';
     JwtModule.register({}),
   ],
   controllers: [StoryController, AuthEventController],
-  providers: [StoryService, PrismaService],
+  providers: [StoryService, PrismaService, LockService],
   exports: [StoryService],
 })
 export class StoryModule {}
