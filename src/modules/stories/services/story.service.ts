@@ -6,6 +6,7 @@ import { ConfigService } from '@nestjs/config';
 import { Cache } from 'cache-manager';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { LockService } from './lock.service';
+import pusherConfig from 'src/config/pusher.config';
 
 @Injectable()
 export class StoryService {
@@ -57,6 +58,8 @@ export class StoryService {
   
         return story;
       });
+
+      await pusherConfig.trigger('ioh-websocket-stories-development', 'new-story', newStory);
   
       await this.sendNotification(newStory);
       await this.cacheManager.del('all-stories');

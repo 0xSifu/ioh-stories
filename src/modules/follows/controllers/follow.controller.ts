@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { Follow } from '@prisma/client';
 import { FollowService } from '../services/follow.service';
-import { CreateFollowDto, DeleteFollowDto } from '../dtos/follow.dto';
+import { CreateFollowDto, DeleteFollowDto, ViewFollowDto } from '../dtos/follow.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { IAuthPayload } from 'src/interfaces/auth.interface';
 import { AuthUser } from 'src/decorators/auth.decorator';
@@ -41,6 +41,19 @@ export class FollowController {
     @Param('id') id: string,
   ): Promise<Follow | null> {
     return this.followService.findFollowById(id);
+  }
+
+  @Get('followers/:userId')
+  async getFollowers(
+    @Param('userId') userId: string,
+  ): Promise<ViewFollowDto[]> {
+    const followers = await this.followService.findFollowers(userId);
+    return followers.map(follow => ({
+      id: follow.id,
+      followerId: follow.followerId,
+      followingId: follow.followingId,
+      createdAt: follow.createdAt,
+    }));
   }
 
   @Delete(':id')
