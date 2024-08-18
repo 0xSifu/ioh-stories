@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Story {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId     String   @db.ObjectId
+  content    String
+  createdAt  DateTime @default(now())
+  expiresAt  DateTime?
+  isDeleted  Boolean  @default(false)
+  updatedAt  DateTime @updatedAt
+  version    Int      @default(0)
+
+  media      Media[]  @relation("StoryMedia")
+  versions   Version[]
+
+  @@unique([id, version], name: "story_id_version_unique")
+  @@index([userId], name: "user_idx")
+  @@index([createdAt, expiresAt], name: "time_idx")
+  @@map("stories")
+}
+
+model Version {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  storyId   String   @db.ObjectId
+  version   Int
+  createdAt DateTime @default(now())
+
+  story     Story    @relation(fields: [storyId], references: [id])
+
+  @@unique([storyId, version], name: "version_story_id_version_unique")
+  @@map("versions")
+}
+
+
+model Follow {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  followerId  String   @db.ObjectId
+  followingId String   @db.ObjectId
+  createdAt   DateTime @default(now())
+
+  @@index([followerId, followingId], name: "follow_idx")
+  @@map("follows")
+}
+
+model Media {
+  id      String   @id @default(auto()) @map("_id") @db.ObjectId
+  url     String
+  storyId String   @db.ObjectId
+  story   Story    @relation("StoryMedia", fields: [storyId], references: [id])
+
+  @@map("media")
+}
+
+model Lock {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  resource  String   
+  ttl       DateTime
+  createdAt DateTime @default(now())
+
+  @@index([resource], name: "lock_resource_idx")
+  @@map("locks")
+}
